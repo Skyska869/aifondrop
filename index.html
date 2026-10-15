@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phone Case — симулятор кейсов</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #17151f;
+      color: #f7f5ff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .app {
+      width: min(100% - 28px, 760px);
+      margin: 0 auto;
+      padding: 24px 0 40px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      margin: 0;
+      font-size: 25px;
+    }
+
+    .balance {
+      padding: 11px 15px;
+      border: 1px solid #ffffff20;
+      border-radius: 14px;
+      background: #242132;
+      color: #ffd166;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .welcome {
+      margin-bottom: 20px;
+      padding: 20px;
+      border: 1px solid #ffffff14;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #342752, #242132);
+    }
+
+    .welcome h2 {
+      margin: 0 0 8px;
+    }
+
+    .welcome p {
+      margin: 0;
+      color: #c3bfd0;
+      line-height: 1.5;
+    }
+
+    .daily-button,
+    .nav-button,
+    .case-button,
+    .action-button {
+      border: 0;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s, opacity .15s, background .15s;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .daily-button {
+      margin-top: 14px;
+      padding: 11px 15px;
+      background: #8065ff;
+    }
+
+    .navigation {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      padding: 6px;
+      border-radius: 14px;
+      background: #211e2d;
+    }
+
+    .nav-button {
+      flex: 1;
+      padding: 11px 8px;
+      background: transparent;
+      color: #bcb8c9;
+    }
+
+    .nav-button.active {
+      background: #8065ff;
+      color: white;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 14px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .cases-list,
+    .inventory-list,
+    .leaderboard {
+      display: grid;
+      gap: 11px;
+    }
+
+    .case-card,
+    .inventory-card,
+    .leader-row {
+      border: 1px solid #ffffff14;
+      border-radius: 16px;
+      background: #242132;
+    }
+
+    .case-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .case-card h3,
+    .inventory-card h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .case-description,
+    .muted {
+      color: #aaa6b9;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .case-price {
+      margin-top: 8px;
+      color: #ffd166;
+      font-weight: 700;
+    }
+
+    .case-button {
+      flex-shrink: 0;
+      padding: 11px 15px;
+      background: #8065ff;
+    }
+
+    .inventory-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .action-button {
+      padding: 9px 13px;
+      background: #35a96d;
+    }
+
+    .sell-all-button {
+      padding: 9px 12px;
+      border: 1px solid #ffffff20;
+      border-radius: 10px;
+      background: #302c3e;
+      color: white;
+      cursor: pointer;
+    }
+
+    .empty-state {
+      padding: 25px 16px;
+      border: 1px dashed #ffffff30;
+      border-radius: 16px;
+      color: #aaa6b9;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .leader-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .leader-row.me {      border-color: #8065ff;
+      background: #302746;
+    }
+
+    .rank-info {
+      margin-bottom: 14px;
+      color: #c3bfd0;
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 200;
+      right: 18px;
+      bottom: 18px;
+      max-width: calc(100% - 36px);
+      padding: 13px 17px;
+      border: 1px solid #ffffff22;
+      border-radius: 12px;
+      background: #302c3e;
+      color: white;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: .2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Окно открытия кейса */
+
+    .overlay {
+      position: fixed;
+      z-index: 100;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: #08070dd9;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .2s, visibility .2s;
+    }
+
+    .overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      width: min(100%, 390px);
+      padding: 22px 18px;
+      border: 1px solid #ffffff20;
+      border-radius: 22px;
+      background: #242132;
+      text-align: center;
+      box-shadow: 0 20px 70px #0009;
+    }
+
+    .modal h2 {
+      margin: 0 0 16px;
+      font-size: 20px;
+    }
+
+    .case-animation {
+      display: grid;
+      min-height: 145px;
+      place-items: center;
+      font-size: 78px;
+    }
+
+    .case-animation.opening {
+      animation: shake .16s infinite alternate;
+    }
+
+    @keyframes shake {
+      from {
+        transform: rotate(-9deg) scale(.96);
+      }
+      to {
+        transform: rotate(9deg) scale(1.06);
+      }
+    }
+
+    .phone-result {
+      display: none;
+      padding: 8px 0 2px;
+    }
+
+    .phone-result.visible {
+      display: block;
+      animation: reveal .45s ease both;
+    }
+
+    @keyframes reveal {
+      from {
+        opacity: 0;
+        transform: scale(.7) translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .phone-emoji {
+      margin-bottom: 8px;
+      font-size: 58px;
+    }
+
+    .phone-result h3 {
+      margin: 5px 0;
+      font-size: 19px;
+    }
+
+    .rarity-label {
+      margin: 8px 0;
+      color: #c5b7ff;
+    }
+
+    .phone-value {
+      margin: 10px 0 15px;
+      color: #ffd166;
+      font-weight: 700;
+    }
+
+    .rarity-common {
+      color: #d2d2d2;
+    }
+
+    .rarity-rare {
+      color: #62b5ff;
+    }
+
+    .rarity-epic {
+      color: #c17aff;
+    }
+
+    .rarity-legendary {
+      color: #ffbe55;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 9px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      min-height: 42px;
+    }
+
+    .keep-button {
+      background: #8065ff;
+    }
+
+    .close-button {
+      margin-top: 12px;
+      padding: 8px;
+      border: 0;
+      background: transparent;
+      color: #aaa6b9;
+      cursor: pointer;
+    }
+
+    @media (max-width: 480px) {
+      .app {
+        width: min(100% - 20px, 760px);
+        padding-top: 16px;
+      }
+
+      .logo {
+        font-size: 21px;
+      }
+
+      .case-card {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .case-button {
+        width: 100%;
+      }
+
+      .nav-button {
+        padding: 10px 4px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header class="header">
+      <h1 class="logo">📱 Phone Case</h1>
+      <div class="balance">Баланс: <span id="balance">0 ₽</span></div>
+    </header>
+
+    <section class="welcome">
+      <h2>Открывай кейсы и собирай телефоны</h2>
+      <p>
+        Покупай виртуальные кейсы, получай случайные смартфоны и решай,
+        оставить их в коллекции или продать.
+      </p>
+      <button class="daily-button" id="dailyButton">Забрать ежедневный бонус: 500 ₽</button>
+    </section>
+
+    <nav class="navigation">
+      <button class="nav-button active" data-page="casesPage">Кейсы</button>
+      <button class="nav-button" data-page="inventoryPage">Коллекция</button>
+      <button class="nav-button" data-page="ratingPage">Рейтинг</button>
+    </nav>    <section class="page active" id="casesPage">
+      <div class="section-heading">
+        <h2>Доступные кейсы</h2>
+      </div>
+      <div class="cases-list" id="casesList"></div>
+    </section>
+
+    <section class="page" id="inventoryPage">
+      <div class="section-heading">
+        <h2>Моя коллекция</h2>
+        <button class="sell-all-button" id="sellAllButton">Продать всё</button>
+      </div>
+      <div class="inventory-list" id="inventoryList"></div>
+    </section>
+
+    <section class="page" id="ratingPage">
+      <div class="section-heading">
+        <h2>Рейтинг игроков</h2>
+      </div>
+      <div class="rank-info" id="myRank"></div>
+      <div class="leaderboard" id="leaderboard"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="overlay" id="dropOverlay" aria-hidden="true">
+    <div class="modal">
+      <h2 id="dropTitle">Открываем кейс...</h2>
+
+      <div class="case-animation" id="caseAnimation">📦</div>
+
+      <div class="phone-result" id="phoneResult">
+        <div class="phone-emoji">📱</div>
+        <h3 id="phoneName"></h3>
+        <div class="rarity-label" id="phoneRarity"></div>
+        <div class="phone-value" id="phoneValue"></div>
+
+        <div class="modal-actions">
+          <button class="action-button" id="sellDropButton">Продать</button>
+          <button class="action-button keep-button" id="keepDropButton">Оставить</button>
+        </div>
+      </div>
+
+      <button class="close-button" id="closeModalButton" hidden>Закрыть</button>
+    </div>
+  </div>
+
+  <script>
+    /*
+      Модели телефонов.
+      Чтобы добавить телефон, добавь объект в массив:
+      { name: "Название модели", brand: "Бренд", value: Цена, rarity: "Обычный" }
+    */
+
+    const phones = [
+      // Apple iPhone
+      { name: "iPhone SE (2020)", brand: "Apple", value: 700, rarity: "Обычный" },
+      { name: "iPhone SE (2022)", brand: "Apple", value: 1000, rarity: "Обычный" },
+      { name: "iPhone 11", brand: "Apple", value: 900, rarity: "Обычный" },
+      { name: "iPhone 11 Pro", brand: "Apple", value: 1300, rarity: "Обычный" },
+      { name: "iPhone 11 Pro Max", brand: "Apple", value: 1600, rarity: "Обычный" },
+      { name: "iPhone 12 mini", brand: "Apple", value: 1300, rarity: "Обычный" },
+      { name: "iPhone 12", brand: "Apple", value: 1600, rarity: "Обычный" },
+      { name: "iPhone 12 Pro", brand: "Apple", value: 2100, rarity: "Редкий" },
+      { name: "iPhone 12 Pro Max", brand: "Apple", value: 2500, rarity: "Редкий" },
+      { name: "iPhone 13 mini", brand: "Apple", value: 2200, rarity: "Редкий" },
+      { name: "iPhone 13", brand: "Apple", value: 2800, rarity: "Редкий" },
+      { name: "iPhone 13 Pro", brand: "Apple", value: 3400, rarity: "Редкий" },
+      { name: "iPhone 13 Pro Max", brand: "Apple", value: 3900, rarity: "Редкий" },
+      { name: "iPhone 14", brand: "Apple", value: 4200, rarity: "Редкий" },
+      { name: "iPhone 14 Plus", brand: "Apple", value: 4600, rarity: "Редкий" },
+      { name: "iPhone 14 Pro", brand: "Apple", value: 5500, rarity: "Эпический" },
+      { name: "iPhone 14 Pro Max", brand: "Apple", value: 6200, rarity: "Эпический" },
+      { name: "iPhone 15", brand: "Apple", value: 6500, rarity: "Эпический" },
+      { name: "iPhone 15 Plus", brand: "Apple", value: 7200, rarity: "Эпический" },
+      { name: "iPhone 15 Pro", brand: "Apple", value: 8400, rarity: "Эпический" },
+      { name: "iPhone 15 Pro Max", brand: "Apple", value: 9500, rarity: "Эпический" },
+      { name: "iPhone 16", brand: "Apple", value: 14000, rarity: "Легендарный" },
+      { name: "iPhone 16 Plus", brand: "Apple", value: 15500, rarity: "Легендарный" },
+      { name: "iPhone 16 Pro", brand: "Apple", value: 17500, rarity: "Легендарный" },
+      { name: "iPhone 16 Pro Max", brand: "Apple", value: 19500, rarity: "Легендарный" },
+
+      // Samsung Galaxy S
+      { name: "Galaxy S20", brand: "Samsung", value: 1500, rarity: "Обычный" },
+      { name: "Galaxy S20 Ultra", brand: "Samsung", value: 2200, rarity: "Редкий" },      { name: "Galaxy S21", brand: "Samsung", value: 2300, rarity: "Редкий" },
+      { name: "Galaxy S21 Ultra", brand: "Samsung", value: 3400, rarity: "Редкий" },
+      { name: "Galaxy S22", brand: "Samsung", value: 3500, rarity: "Редкий" },
+      { name: "Galaxy S22 Ultra", brand: "Samsung", value: 5500, rarity: "Эпический" },
+      { name: "Galaxy S23", brand: "Samsung", value: 6000, rarity: "Эпический" },
+      { name: "Galaxy S23 Ultra", brand: "Samsung", value: 9500, rarity: "Эпический" },
+      { name: "Galaxy S24", brand: "Samsung", value: 12000, rarity: "Легендарный" },
+      { name: "Galaxy S24 Ultra", brand: "Samsung", value: 19000, rarity: "Легендарный" },
+
+      // Samsung Galaxy A и складные
+      { name: "Galaxy A14", brand: "Samsung", value: 700, rarity: "Обычный" },
+      { name: "Galaxy A34", brand: "Samsung", value: 1800, rarity: "Обычный" },
+      { name: "Galaxy A54", brand: "Samsung", value: 2800, rarity: "Редкий" },
+      { name: "Galaxy A55", brand: "Samsung", value: 4300, rarity: "Редкий" },
+      { name: "Galaxy Z Flip5", brand: "Samsung", value: 8500, rarity: "Эпический" },
+      { name: "Galaxy Z Fold5", brand: "Samsung", value: 15000, rarity: "Легендарный" },
+      { name: "Galaxy Z Flip6", brand: "Samsung", value: 13000, rarity: "Легендарный" },
+      { name: "Galaxy Z Fold6", brand: "Samsung", value: 21000, rarity: "Легендарный" },
+
+      // Xiaomi
+      { name: "Xiaomi 11T", brand: "Xiaomi", value: 1500, rarity: "Обычный" },
+      { name: "Xiaomi 12", brand: "Xiaomi", value: 2600, rarity: "Редкий" },
+      { name: "Xiaomi 12 Pro", brand: "Xiaomi", value: 3500, rarity: "Редкий" },
+      { name: "Xiaomi 13", brand: "Xiaomi", value: 6500, rarity: "Эпический" },
+      { name: "Xiaomi 13 Pro", brand: "Xiaomi", value: 8500, rarity: "Эпический" },
+      { name: "Xiaomi 14", brand: "Xiaomi", value: 12000, rarity: "Легендарный" },
+      { name: "Xiaomi 14 Ultra", brand: "Xiaomi", value: 19000, rarity: "Легендарный" },
+
+      // Redmi
+      { name: "Redmi Note 10", brand: "Xiaomi", value: 600, rarity: "Обычный" },
+      { name: "Redmi Note 11", brand: "Xiaomi", value: 800, rarity: "Обычный" },
+      { name: "Redmi Note 12", brand: "Xiaomi", value: 1100, rarity: "Обычный" },
+      { name: "Redmi Note 13 Pro", brand: "Xiaomi", value: 2800, rarity: "Редкий" },
+      { name: "Redmi Note 13 Pro+", brand: "Xiaomi", value: 4000, rarity: "Редкий" },
+
+      // POCO
+      { name: "POCO X3 Pro", brand: "POCO", value: 1000, rarity: "Обычный" },
+      { name: "POCO X5 Pro", brand: "POCO", value: 1800, rarity: "Обычный" },
+      { name: "POCO F5", brand: "POCO", value: 3200, rarity: "Редкий" },
+      { name: "POCO F5 Pro", brand: "POCO", value: 4500, rarity: "Редкий" },
+      { name: "POCO F6 Pro", brand: "POCO", value: 7000, rarity: "Эпический" },
+
+      // Honor
+      { name: "Honor X8", brand: "Honor", value: 700, rarity: "Обычный" },
+      { name: "Honor X9a", brand: "Honor", value: 1200, rarity: "Обычный" },
+      { name: "Honor 70", brand: "Honor", value: 1800, rarity: "Обычный" },
+      { name: "Honor 90", brand: "Honor", value: 3000, rarity: "Редкий" },
+      { name: "Honor 200", brand: "Honor", value: 5000, rarity: "Редкий" },
+      { name: "Honor Magic5 Pro", brand: "Honor", value: 8500, rarity: "Эпический" },
+      { name: "Honor Magic6 Pro", brand: "Honor", value: 14000, rarity: "Легендарный" },
+      { name: "Honor Magic V2", brand: "Honor", value: 16000, rarity: "Легендарный" },
+
+      // Huawei
+      { name: "Huawei P30", brand: "Huawei", value: 800, rarity: "Обычный" },
+      { name: "Huawei P40 Pro", brand: "Huawei", value: 1800, rarity: "Обычный" },
+      { name: "Huawei P50 Pro", brand: "Huawei", value: 3500, rarity: "Редкий" },
+      { name: "Huawei P60 Pro", brand: "Huawei", value: 6500, rarity: "Эпический" },
+      { name: "Huawei Mate 50 Pro", brand: "Huawei", value: 6000, rarity: "Эпический" },
+      { name: "Huawei Mate X3", brand: "Huawei", value: 13000, rarity: "Легендарный" },
+
+      // Google Pixel      { name: "Google Pixel 6", brand: "Google", value: 2400, rarity: "Редкий" },
+      { name: "Google Pixel 6 Pro", brand: "Google", value: 3500, rarity: "Редкий" },
+      { name: "Google Pixel 7", brand: "Google", value: 4200, rarity: "Редкий" },
+      { name: "Google Pixel 7 Pro", brand: "Google", value: 6500, rarity: "Эпический" },
+      { name: "Google Pixel 8", brand: "Google", value: 8500, rarity: "Эпический" },
+      { name: "Google Pixel 8 Pro", brand: "Google", value: 12500, rarity: "Легендарный" },
+
+      // OnePlus
+      { name: "OnePlus 9 Pro", brand: "OnePlus", value: 2200, rarity: "Редкий" },
+      { name: "OnePlus 10 Pro", brand: "OnePlus", value: 3800, rarity: "Редкий" },
+      { name: "OnePlus 11", brand: "OnePlus", value: 6500, rarity: "Эпический" },
+      { name: "OnePlus 12", brand: "OnePlus", value: 11000, rarity: "Легендарный" },
+      { name: "OnePlus Open", brand: "OnePlus", value: 15000, rarity: "Легендарный" },
+
+      // OPPO
+      { name: "OPPO Reno8", brand: "OPPO", value: 1300, rarity: "Обычный" },
+      { name: "OPPO Reno10 Pro", brand: "OPPO", value: 3200, rarity: "Редкий" },
+      { name: "OPPO Find X5 Pro", brand: "OPPO", value: 4200, rarity: "Редкий" },
+      { name: "OPPO Find X6 Pro", brand: "OPPO", value: 7500, rarity: "Эпический" },
+      { name: "OPPO Find N3", brand: "OPPO", value: 13500, rarity: "Легендарный" },
+
+      // Vivo
+      { name: "Vivo V25", brand: "Vivo", value: 1100, rarity: "Обычный" },
+      { name: "Vivo V29", brand: "Vivo", value: 2400, rarity: "Редкий" },
+      { name: "Vivo X80 Pro", brand: "Vivo", value: 4200, rarity: "Редкий" },
+      { name: "Vivo X100 Pro", brand: "Vivo", value: 9500, rarity: "Эпический" },
+
+      // Nothing
+      { name: "Nothing Phone (1)", brand: "Nothing", value: 1800, rarity: "Обычный" },
+      { name: "Nothing Phone (2)", brand: "Nothing", value: 4500, rarity: "Редкий" },
+      { name: "Nothing Phone (2a)", brand: "Nothing", value: 3000, rarity: "Редкий" }
+    ];
+
+    const cases = [
+      {
+        id: "starter",
+        name: "Стартовый кейс",
+        icon: "📦",
+        description: "Недорогой кейс для начала игры",
+        price: 500,
+        chances: {
+          "Обычный": 76,
+          "Редкий": 20,
+          "Эпический": 3.5,
+          "Легендарный": 0.5
+        }
+      },
+      {
+        id: "pro",
+        name: "Профи-кейс",
+        icon: "💎",
+        description: "Повышенный шанс получить дорогой телефон",
+        price: 1800,
+        chances: {
+          "Обычный": 45,
+          "Редкий": 37,
+          "Эпический": 15,
+          "Легендарный": 3
+        }
+      },
+      {
+        id: "legendary",
+        name: "Легендарный кейс",
+        icon: "👑",
+        description: "Лучшие шансы на эпические и легендарные модели",
+        price: 5000,
+        chances: {
+          "Обычный": 20,
+          "Редкий": 35,
+          "Эпический": 32,
+          "Легендарный": 13
+        }
+      }
+    ];
+
+    const STORAGE_KEY = "phoneCaseGameSaveV2";
+
+    const state = loadState();
+    let opening = false;
+    let currentDrop = null;
+    let toastTimer;
+
+    const $ = (selector) => document.querySelector(selector);
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+        if (saved && typeof saved.balance === "number") {
+          return {
+            balance: saved.balance,
+            inventory: Array.isArray(saved.inventory) ? saved.inventory : [],
+            soldPoints: Number(saved.soldPoints) || 0,
+            dailyDate: saved.dailyDate || ""
+          };
+        }
+      } catch (error) {
+        console.warn("Не удалось загрузить сохранение:", error);
+      }
+
+      return {
+        balance: 3000,
+        inventory: [],
+        soldPoints: 0,
+        dailyDate: ""
+      };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function formatMoney(amount) {
+      return `${Math.floor(amount).toLocaleString("ru-RU")} ₽`;
+    }
+
+    function showToast(message) {
+      const toast = $("#toast");      toast.textContent = message;
+      toast.classList.add("show");
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2400);
+    }
+
+    function renderCases() {
+      $("#casesList").innerHTML = cases.map((item) => `
+        <article class="case-card">
+          <div>
+            <h3>${item.icon} ${item.name}</h3>
+            <div class="case-description">${item.description}</div>
+            <div class="case-price">Цена: ${formatMoney(item.price)}</div>
+          </div>
+
+          <button
+            class="case-button"
+            data-open-case="${item.id}"
+            ${opening || state.balance < item.price ? "disabled" : ""}
+          >
+            Открыть
+          </button>
+        </article>
+      `).join("");
+    }
+
+    function renderInventory() {
+      const list = $("#inventoryList");
+      const sellAllButton = $("#sellAllButton");
+
+      sellAllButton.disabled = state.inventory.length === 0;
+
+      if (state.inventory.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            Коллекция пока пуста.<br>
+            Открой кейс и найди свой первый телефон!
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = state.inventory.map((item) => {
+        const phone = phones[item.phoneIndex];
+
+        if (!phone) return "";
+
+        return `
+          <article class="inventory-card">
+            <div>
+              <h3>📱 ${phone.brand} ${phone.name}</h3>
+              <div class="muted">${phone.rarity}</div>
+              <div class="case-price">Цена продажи: ${formatMoney(phone.value)}</div>
+            </div>
+
+            <button class="action-button" data-sell-phone="${item.id}">
+              Продать
+            </button>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function getScore() {
+      const inventoryScore = state.inventory.reduce((total, item) => {
+        const phone = phones[item.phoneIndex];
+        return total + (phone ? Math.floor(phone.value / 100) : 0);
+      }, 0);
+
+      return state.soldPoints + inventoryScore;
+    }
+
+    function renderRating() {
+      const score = getScore();
+
+      const players = [
+        { name: "Алекс", score: 1260 },
+        { name: "Маша", score: 890 },
+        { name: "Даня", score: 540 },
+        { name: "Ты", score, isPlayer: true }
+      ].sort((a, b) => b.score - a.score);
+
+      const rank = players.findIndex((player) => player.isPlayer) + 1;
+
+      $("#myRank").textContent = score
+        ? `Твоё место: ${rank} · Твои очки: ${score.toLocaleString("ru-RU")}`
+        : "Открывай кейсы и продавай телефоны, чтобы набрать очки.";
+
+      $("#leaderboard").innerHTML = players.map((player, index) => `
+        <div class="leader-row ${player.isPlayer ? "me" : ""}">
+          <span>${index + 1}. ${player.name}</span>
+          <strong>${player.score.toLocaleString("ru-RU")} очков</strong>
+        </div>
+      `).join("");
+    }
+
+    function render() {
+      $("#balance").textContent = formatMoney(state.balance);
+      renderCases();
+      renderInventory();
+      renderRating();
+    }
+
+    function weightedChoice(entries) {
+      const totalWeight = entries.reduce((sum, item) => sum + item.weight, 0);
+      let roll = Math.random() * totalWeight;
+
+      for (const item of entries) {
+        roll -= item.weight;
+        if (roll <= 0) return item.value;
+      }
+
+      return entries[entries.length - 1].value;
+    }
+
+    function choosePhone(caseData) {
+      const rarity = weightedChoice(
+        Object.entries(caseData.chances).map(([name, weight]) => ({
+          value: name,
+          weight
+        }))
+      );
+
+      const availablePhones = phones
+        .map((phone, index) => ({ phone, index }))
+        .filter((item) => item.phone.rarity === rarity);
+
+      const result = availablePhones[
+        Math.floor(Math.random() * availablePhones.length)
+      ];
+
+      return result.index;
+    }
+
+    function getRarityClass(rarity) {
+      const classes = {
+        "Обычный": "rarity-common",        "Редкий": "rarity-rare",
+        "Эпический": "rarity-epic",
+        "Легендарный": "rarity-legendary"
+      };
+
+      return classes[rarity] || "";
+    }
+
+    function openCase(caseId) {
+      if (opening) return;
+
+      const caseData = cases.find((item) => item.id === caseId);
+      if (!caseData) return;
+
+      if (state.balance < caseData.price) {
+        showToast("Недостаточно денег для этого кейса");
+        return;
+      }
+
+      state.balance -= caseData.price;
+      saveState();
+      render();
+
+      opening = true;
+      const phoneIndex = choosePhone(caseData);
+      const phone = phones[phoneIndex];
+
+      $("#dropOverlay").classList.add("visible");
+      $("#dropOverlay").setAttribute("aria-hidden", "false");
+
+      $("#dropTitle").textContent = `Открываем: ${caseData.name}`;
+      $("#caseAnimation").textContent = caseData.icon;
+      $("#caseAnimation").classList.add("opening");
+      $("#phoneResult").classList.remove("visible");
+      $("#closeModalButton").hidden = true;
+
+      setTimeout(() => {
+        $("#caseAnimation").classList.remove("opening");
+        $("#caseAnimation").textContent = "✨";
+
+        $("#dropTitle").textContent = "Тебе выпал телефон!";
+        $("#phoneName").textContent = `${phone.brand} ${phone.name}`;
+
+        const rarityElement = $("#phoneRarity");
+        rarityElement.textContent = phone.rarity;
+        rarityElement.className = `rarity-label ${getRarityClass(phone.rarity)}`;
+
+        $("#phoneValue").textContent = `Можно продать за ${formatMoney(phone.value)}`;
+        $("#phoneResult").classList.add("visible");
+        $("#closeModalButton").hidden = false;
+
+        currentDrop = { phoneIndex };
+        opening = false;
+        renderCases();
+      }, 1900);
+    }
+
+    function finishDrop(action) {
+      if (!currentDrop) return;
+
+      const phone = phones[currentDrop.phoneIndex];
+
+      if (action === "sell") {
+        state.balance += phone.value;
+        state.soldPoints += Math.floor(phone.value / 100);
+        showToast(`${phone.brand} ${phone.name} продан за ${formatMoney(phone.value)}`);
+      } else {
+        state.inventory.push({
+          id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          phoneIndex: currentDrop.phoneIndex
+        });
+        showToast(`${phone.brand} ${phone.name} добавлен в коллекцию`);
+      }
+
+      saveState();
+      render();
+      closeModal();
+    }
+
+    function closeModal() {
+      $("#dropOverlay").classList.remove("visible");
+      $("#dropOverlay").setAttribute("aria-hidden", "true");
+      currentDrop = null;
+    }
+
+    $("#casesList").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-open-case]");
+      if (button) openCase(button.dataset.openCase);
+    });
+
+    $("#sellDropButton").addEventListener("click", () => {
+      finishDrop("sell");
+    });
+
+    $("#keepDropButton").addEventListener("click", () => {
+      finishDrop("keep");
+    });
+
+    $("#closeModalButton").addEventListener("click", closeModal);
+
+    $("#inventoryList").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-sell-phone]");
+      if (!button) return;
+
+      const index = state.inventory.findIndex(
+        (item) => item.id === button.dataset.sellPhone
+      );
+
+      if (index === -1) return;
+
+      const [item] = state.inventory.splice(index, 1);
+      const phone = phones[item.phoneIndex];
+
+      state.balance += phone.value;
+      state.soldPoints += Math.floor(phone.value / 100);
+
+      saveState();
+      render();
+      showToast(`${phone.brand} ${phone.name} продан за ${formatMoney(phone.value)}`);
+    });
+
+    $("#sellAllButton").addEventListener("click", () => {
+      if (state.inventory.length === 0) return;
+
+      let total = 0;
+
+      for (const item of state.inventory) {
+        const phone = phones[item.phoneIndex];
+        if (!phone) continue;
+
+        total += phone.value;
+        state.soldPoints += Math.floor(phone.value / 100);
+      }
+
+      const count = state.inventory.length;
+      state.inventory = [];      state.balance += total;
+
+      saveState();
+      render();
+      showToast(`Продано телефонов: ${count}. Получено ${formatMoney(total)}`);
+    });
+
+    $("#dailyButton").addEventListener("click", () => {
+      const today = new Date().toLocaleDateString("en-CA");
+
+      if (state.dailyDate === today) {
+        showToast("Ежедневный бонус уже забран. Загляни завтра!");
+        return;
+      }
+
+      state.dailyDate = today;
+      state.balance += 500;
+
+      saveState();
+      render();
+      showToast("Ежедневный бонус: 500 ₽");
+    });
+
+    document.querySelectorAll(".nav-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".nav-button").forEach((item) => {
+          item.classList.toggle("active", item === button);
+        });
+
+        document.querySelectorAll(".page").forEach((page) => {
+          page.classList.toggle("active", page.id === button.dataset.page);
+        });
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>
